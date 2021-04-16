@@ -33,7 +33,7 @@ function WaitEnd
 {
     Write-Host "Hit any key to continue or wait for 5 secs..."
     $counter = 0
-    while(!$Host.UI.RawUI.KeyAvailable -and ($counter++ -lt 5))
+    while(!$Host.UI.RawUI.KeyAvailable -and ($counter++ -lt 50))
     {
         Start-Sleep -Milliseconds 100
     }
