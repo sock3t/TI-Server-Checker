@@ -62,6 +62,7 @@ function Show-Menu
         [string]$Title = 'Regions'
     )
     Clear-Host
+    Write-Host "Please choose a region:"
     Write-Host "================ $Title ================"
     Write-Host "'a' Australia"
     Write-Host "'b' Brazil"
