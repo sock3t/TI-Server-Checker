@@ -47,7 +47,8 @@ Function GetAllServerInfo_f
     ForEach ($Server in $Servers)
     {
         try {
-            Get-SteamServerInfo -ErrorAction SilentlyContinue -WarningAction SilentlyContinue -Timeout 400 -IPAddress $Server -Port 27015 | Where-Object {$_.Players -lt $_.MaxPlayers} | Select-Object -Property "ServerName", "Players", "IPAddress" | % { $_.ServerName = $_.ServerName.Replace("Official Evrima ", ""); $_ }
+            #Get-SteamServerInfo -ErrorAction SilentlyContinue -WarningAction SilentlyContinue -Timeout 400 -IPAddress $Server -Port 27015 | Where-Object {$_.Players -lt $_.MaxPlayers} | Select-Object -Property "ServerName", "Players", "IPAddress" | % { $_.ServerName = $_.ServerName.Replace("Official Evrima ", ""); $_ }
+            Get-SteamServerInfo -ErrorAction SilentlyContinue -WarningAction SilentlyContinue -Timeout 400 -IPAddress $Server -Port 27015 | Select-Object -Property "ServerName", "Players", "IPAddress" | % { $_.ServerName = $_.ServerName.Replace("Official Evrima ", ""); $_ }
         }
         catch [Exception] {
             #$_.message
@@ -56,7 +57,7 @@ Function GetAllServerInfo_f
     }
 }
 
-function Show-Menu
+function Show-Region-Menu
 {
     param (
         [string]$Title = 'Regions'
@@ -64,11 +65,27 @@ function Show-Menu
     Clear-Host
     Write-Host "Please choose a region:"
     Write-Host "================ $Title ================"
-    Write-Host "'a' Australia"
+    Write-Host "$Servers"
     Write-Host "'b' Brazil"
     Write-Host "'e' Europe"
     Write-Host "'n' North America"
     Write-Host "'q' to quit"
+}
+function Show-Server-Menu
+{
+    param (
+        [string]$Title = 'Regions'
+    )
+    Clear-Host
+    $count = 0
+    Write-Host "Please choose a server:"
+    Write-Host "================ $Title ================"
+    ForEach ($Server in $Servers)
+    {
+        $count++
+        Write-Host $count": $Server"
+    }
+    
 }
 function WaitEnd
 {
@@ -187,7 +204,7 @@ CheckPreRequisites
 # Main
 do
 {
-    Show-Menu
+    Show-Region-Menu
 
     # we need to clear the input buffer so the last key input does not interfere with the next one
     Start-Sleep -Milliseconds 100
@@ -223,44 +240,101 @@ do
     {
         do
         {
-            <#
-            # https://devblogs.microsoft.com/powershell/powershell-foreach-object-parallel-feature/
-            # ^^ this does only speed up if a lot of servers are queried. But usuallly we want to check only the Official servers for our own region
-            # I keep this for future reference in case the usage of this script ever gets expanded.
-            
-            $start = Get-Date
-            $FreeServers = GetAllServerInfo_w
-            Clear-Host
-            $FreeServers | Format-Table @{ e='*'; width = 25 }
-            $end = Get-Date
-            Write-Host -ForegroundColor Red ($end - $start).TotalSeconds
-            #>
+            Show-Server-Menu
+            # we need to clear the input buffer so the last key input does not interfere with the next one
+            Start-Sleep -Milliseconds 100
+            $host.ui.RawUI.FlushInputBuffer();
 
-            #$start = Get-Date
-            $FreeServers = GetAllServerInfo_f
+            $key = [Console]::ReadKey("NoEcho,IncludeKeyUp,IncludeKeyDown")
+            $char = $key.KeyChar
 
-            Clear-Host
-            $ts = Get-date
-            Write-Host $ts
-            Write-Host
-            Write-Host $region
+            # clear input buffer again so it does not break the next loop early
+            Start-Sleep -Milliseconds 100
+            $host.ui.RawUI.FlushInputBuffer();
 
-            $FreeServers | Format-Table @{ e='*'; width = 25 }
-            #$end = Get-Date
-            #Write-Host -ForegroundColor Red ($end - $start).TotalSeconds
-
-            Write-Host "Hit any key to get back to the Region selection."
-            Start-Sleep -m 100
-            if (CheckConnection)
+            switch ($char)
             {
-                Write-Host
-                Write-Host
-                Write-Host "###############################################################"
-                Write-Host "## Connection to The Isle server detected. Stopping queries. ##"
-                Write-Host "###############################################################"
-                Start-Sleep -s 10
-                break
+                '1' {
+                    $Server = "Server 1"
+                    $Servers = @($Servers[0])
+                }
+                '2' {
+                    $Server = "Server 2"
+                    $Servers = @($Servers[1])
+                }
+                '3' {
+                    $Server = "Server 3"
+                    $Servers = @($Servers[2])
+                }
+                '4' {
+                    $Server = "Server 4"
+                    $Servers = @($Servers[3])
+                }
+                '5' {
+                    $Server = "Server 5"
+                    $Servers = @($Servers[4])
+                }
+                '6' {
+                    $Server = "Server 6"
+                    $Servers = @($Servers[5])
+                }
+                '7' {
+                    $Server = "Server 7"
+                    $Servers = @($Servers[6])
+                }
+                '8' {
+                    $Server = "Server 8"
+                    $Servers = @($Servers[7])
+                }
+                '9' {
+                    $Server = "Server 9"
+                    $Servers = @($Servers[8])
+                }
             }
+            do
+            {
+                <#
+                # https://devblogs.microsoft.com/powershell/powershell-foreach-object-parallel-feature/
+                # ^^ this does only speed up if a lot of servers are queried. But usuallly we want to check only the Official servers for our own region
+                # I keep this for future reference in case the usage of this script ever gets expanded.
+                
+                $start = Get-Date
+                $FreeServers = GetAllServerInfo_w
+                Clear-Host
+                $FreeServers | Format-Table @{ e='*'; width = 25 }
+                $end = Get-Date
+                Write-Host -ForegroundColor Red ($end - $start).TotalSeconds
+                #>
+
+                #$start = Get-Date
+                $FreeServers = GetAllServerInfo_f
+
+                Clear-Host
+                $ts = Get-date
+                Write-Host $ts
+                Write-Host
+                Write-Host $region
+
+                $FreeServers | Format-Table @{ e='*'; width = 25 }
+                $icount++
+                Write-Host -NoNewline $icount
+                #$end = Get-Date
+                #Write-Host -ForegroundColor Red ($end - $start).TotalSeconds
+
+                Write-Host "Hit any key to get back to the Region selection."
+                <#Start-Sleep -m 100
+                if (CheckConnection)
+                {
+                    Write-Host
+                    Write-Host
+                    Write-Host "###############################################################"
+                    Write-Host "## Connection to The Isle server detected. Stopping queries. ##"
+                    Write-Host "###############################################################"
+                    Start-Sleep -s 10
+                    break
+                }
+                #>
+            } until ($Host.UI.RawUI.KeyAvailable)
         }
         until ($Host.UI.RawUI.KeyAvailable)
     }
