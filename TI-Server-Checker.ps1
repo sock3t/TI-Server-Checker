@@ -138,7 +138,7 @@ function CheckConnection
     $TrafficHits = 0
     Do
     {
-        $port = Get-NetworkStatistics | Where-Object {$_.ProcessName -eq 'steam' -and $_.LocalPort -ge 50000 -and $_.LocalPort -le 65535 } | Select-Object -ExpandProperty LocalPort
+        $port = Get-NetworkStatistics | Where-Object {$_.ProcessName -eq 'steam' -and $_.LocalPort -ge 28000 } | Select-Object -ExpandProperty LocalPort
         if (![string]::IsNullOrWhiteSpace($port))
         {
             $TrafficHits++
