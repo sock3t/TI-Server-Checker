@@ -138,7 +138,8 @@ function CheckConnection
     $TrafficHits = 0
     Do
     {
-        $port = Get-NetworkStatistics | Where-Object {$_.ProcessName -eq 'steam' -and $_.LocalPort -ge 28000 } | Select-Object -ExpandProperty LocalPort
+        $port = Get-NetworkStatistics | Where-Object {$_.ProcessName -eq 'steam' -and $_.LocalPort -ge 28000 -and $_.LocalAddress -ne "0.0.0.0" -and $_.LocalAddress -ne "127.0.0.1"} | Select-Object -ExpandProperty LocalPort
+        #$port = Get-NetworkStatistics | Where-Object {$_.ProcessName -eq 'steam' -and $_.LocalPort -ge 28000 } | Select-Object -ExpandProperty LocalPort
         if (![string]::IsNullOrWhiteSpace($port))
         {
             $TrafficHits++
@@ -170,10 +171,11 @@ function CheckConnection
 function CheckPreRequisites
 {
     if (Get-Module -ListAvailable -Name SteamPS) {
-        Write-Host "SteamPS already Installed"
-        WaitEnd
+        #Write-Host "SteamPS already Installed"
+        #WaitEnd
     } 
     else {
+        Set-ExecutionPolicy RemoteSigned -Force
         $PrereqFile = "$pwd\Prerequisites.ps1"
         Start-Process -FilePath 'powershell' -Wait -ArgumentList ( '-NoProfile', $PrereqFile ) -verb RunAs        
     }

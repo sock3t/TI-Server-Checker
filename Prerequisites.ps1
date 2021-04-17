@@ -40,6 +40,5 @@ function WaitEnd
 }
 
 # main
-Set-ExecutionPolicy RemoteSigned -Force
 InstallPreRequisites
 WaitEnd
