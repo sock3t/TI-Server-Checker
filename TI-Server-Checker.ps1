@@ -30,7 +30,8 @@ https://github.com/hjorslev/SteamPS
 $AUServers = "13.211.86.139", "54.253.198.194"
 $BRServers = "54.94.45.219", "54.207.198.78", "52.67.88.139"
 $NAServers = "54.67.100.202", "13.57.204.50", "3.101.83.56", "52.53.225.74", "18.144.168.156", "3.101.104.105", "18.144.64.94", "13.56.16.27"
-$EUServers = "3.250.111.132", "52.48.44.22", "18.203.67.73", "3.249.154.224", "34.244.123.102", "34.240.7.84", "54.171.180.126", "3.251.77.114"
+$EUServers = "3.250.191.172", "3.250.111.132", "52.48.44.22", "18.203.67.73", "3.249.154.224", "34.244.123.102", "34.240.7.84", "54.171.180.126", "3.251.77.114"
+$Progress = ".", "o", "O", "o"
 
 
 workflow GetAllServerInfo_w
@@ -47,13 +48,22 @@ Function GetAllServerInfo_f
     ForEach ($Server in $Servers)
     {
         try {
-            #Get-SteamServerInfo -ErrorAction SilentlyContinue -WarningAction SilentlyContinue -Timeout 400 -IPAddress $Server -Port 27015 | Where-Object {$_.Players -lt $_.MaxPlayers} | Select-Object -Property "ServerName", "Players", "IPAddress" | % { $_.ServerName = $_.ServerName.Replace("Official Evrima ", ""); $_ }
-            Get-SteamServerInfo -ErrorAction SilentlyContinue -WarningAction SilentlyContinue -Timeout 400 -IPAddress $Server -Port 27015 | Select-Object -Property "ServerName", "Players", "IPAddress" | % { $_.ServerName = $_.ServerName.Replace("Official Evrima ", ""); $_ }
+            Get-SteamServerInfo -ErrorAction SilentlyContinue -WarningAction SilentlyContinue -Timeout 400 -IPAddress $Server -Port 27015 | Where-Object {$_.Players -lt $_.MaxPlayers} | Select-Object -Property "ServerName", "Players", "MaxPlayers", "Version" | % { $_.ServerName = $_.ServerName.Replace("Official Evrima ", ""); $_ }
         }
         catch [Exception] {
             #$_.message
         }
         
+    }
+}
+Function GetServerInfo
+{
+    Param($IP)
+    try {
+        Get-SteamServerInfo -ErrorAction SilentlyContinue -WarningAction SilentlyContinue -Timeout 400 -IPAddress $IP -Port 27015 | Select-Object -Property "ServerName", "Players", "MaxPlayers", "Version" | % { $_.ServerName = $_.ServerName.Replace("Official Evrima ", ""); $_ }
+    }
+    catch [Exception] {
+        #$_.message
     }
 }
 
@@ -65,7 +75,7 @@ function Show-Region-Menu
     Clear-Host
     Write-Host "Please choose a region:"
     Write-Host "================ $Title ================"
-    Write-Host "$Servers"
+    Write-Host "'a' Australia"
     Write-Host "'b' Brazil"
     Write-Host "'e' Europe"
     Write-Host "'n' North America"
@@ -74,17 +84,20 @@ function Show-Region-Menu
 function Show-Server-Menu
 {
     param (
-        [string]$Title = 'Regions'
+        [string]$Title = 'Servers'
     )
     Clear-Host
-    $count = 0
+    $ServerID = 0
     Write-Host "Please choose a server:"
     Write-Host "================ $Title ================"
     ForEach ($Server in $Servers)
     {
-        $count++
-        Write-Host $count": $Server"
+        $ServerID++
+        Write-Host "'${ServerID}' Official Evrima Stress Test - ${RegionCode}${ServerID}"
+    
     }
+    Write-Host "'a' to check all (only use for better timing when to hit the 'Refresh' button!)"
+    Write-Host "'q' return to region menu"
     
 }
 function WaitEnd
@@ -156,7 +169,6 @@ function CheckConnection
     Do
     {
         $port = Get-NetworkStatistics | Where-Object {$_.ProcessName -eq 'steam' -and $_.LocalPort -ge 28000 -and $_.LocalAddress -ne "0.0.0.0" -and $_.LocalAddress -ne "127.0.0.1"} | Select-Object -ExpandProperty LocalPort
-        #$port = Get-NetworkStatistics | Where-Object {$_.ProcessName -eq 'steam' -and $_.LocalPort -ge 28000 } | Select-Object -ExpandProperty LocalPort
         if (![string]::IsNullOrWhiteSpace($port))
         {
             $TrafficHits++
@@ -177,10 +189,11 @@ function CheckConnection
     if ($TrafficHits -gt 0)
     {
         Write-Host
-        Write-Host "##########################"
-        Write-Host "## Awwwww... next time! ##"
-        Write-Host "##########################"
+        Write-Host "#####################################################################"
+        Write-Host "## I know it's hard... keep going... next time you might be lucky! ##"
+        Write-Host "#####################################################################"
         Start-Sleep -s 7
+        break
     }
     return $false
 }
@@ -221,18 +234,22 @@ do
     {
         'A' {
             $region = "Australia"
+            $RegionCode = "AU"
             $Servers = $AUServers
         }
         'B' {
             $region = "Brazil"
+            $RegionCode = "BR"
             $Servers = $BRServers
         }
         'E' {
             $region = "Europe"
+            $RegionCode = "EU"
             $Servers = $EUServers
         }
         'N' {
             $region = "North America"
+            $RegionCode = "NA"
             $Servers = $NAServers
         }
     }
@@ -252,91 +269,74 @@ do
             Start-Sleep -Milliseconds 100
             $host.ui.RawUI.FlushInputBuffer();
 
-            switch ($char)
+            # this is a hack to convert the char from the keypress into an integer:
+            [Int32]$idx = 0
+            if ([System.Int32]::TryParse($char, [ref]$idx))
             {
-                '1' {
-                    $Server = "Server 1"
-                    $Servers = @($Servers[0])
-                }
-                '2' {
-                    $Server = "Server 2"
-                    $Servers = @($Servers[1])
-                }
-                '3' {
-                    $Server = "Server 3"
-                    $Servers = @($Servers[2])
-                }
-                '4' {
-                    $Server = "Server 4"
-                    $Servers = @($Servers[3])
-                }
-                '5' {
-                    $Server = "Server 5"
-                    $Servers = @($Servers[4])
-                }
-                '6' {
-                    $Server = "Server 6"
-                    $Servers = @($Servers[5])
-                }
-                '7' {
-                    $Server = "Server 7"
-                    $Servers = @($Servers[6])
-                }
-                '8' {
-                    $Server = "Server 8"
-                    $Servers = @($Servers[7])
-                }
-                '9' {
-                    $Server = "Server 9"
-                    $Servers = @($Servers[8])
-                }
+                $idx--
+                $Server = $Servers[$idx]
             }
-            do
+            if ($char -ne 'q')
             {
-                <#
-                # https://devblogs.microsoft.com/powershell/powershell-foreach-object-parallel-feature/
-                # ^^ this does only speed up if a lot of servers are queried. But usuallly we want to check only the Official servers for our own region
-                # I keep this for future reference in case the usage of this script ever gets expanded.
-                
-                $start = Get-Date
-                $FreeServers = GetAllServerInfo_w
-                Clear-Host
-                $FreeServers | Format-Table @{ e='*'; width = 25 }
-                $end = Get-Date
-                Write-Host -ForegroundColor Red ($end - $start).TotalSeconds
-                #>
-
-                #$start = Get-Date
-                $FreeServers = GetAllServerInfo_f
-
-                Clear-Host
-                $ts = Get-date
-                Write-Host $ts
-                Write-Host
-                Write-Host $region
-
-                $FreeServers | Format-Table @{ e='*'; width = 25 }
-                $icount++
-                Write-Host -NoNewline $icount
-                #$end = Get-Date
-                #Write-Host -ForegroundColor Red ($end - $start).TotalSeconds
-
-                Write-Host "Hit any key to get back to the Region selection."
-                <#Start-Sleep -m 100
-                if (CheckConnection)
+                do
                 {
+                    <#
+                    # https://devblogs.microsoft.com/powershell/powershell-foreach-object-parallel-feature/
+                    # ^^ this does only speed up if a lot of servers are queried. But usuallly we want to check only the Official servers for our own region
+                    # I keep this for future reference in case the usage of this script ever gets expanded.
+                    
+                    $start = Get-Date
+                    $FreeServers = GetAllServerInfo_w
+                    Clear-Host
+                    $FreeServers | Format-Table @{ e='*'; width = 25 }
+                    $end = Get-Date
+                    Write-Host -ForegroundColor Red ($end - $start).TotalSeconds
+                    #>
+
+                    #$start = Get-Date
+                    if ($char -eq "a")
+                    {
+                        $ServerInfo = GetAllServerInfo_f
+                    }
+                    else {
+                        $ServerInfo = GetServerInfo -IP $Server    
+                    }
+                    
+                    Clear-Host
+                    $ts = Get-date
+                    Write-Host $ts
                     Write-Host
-                    Write-Host
-                    Write-Host "###############################################################"
-                    Write-Host "## Connection to The Isle server detected. Stopping queries. ##"
-                    Write-Host "###############################################################"
-                    Start-Sleep -s 10
-                    break
-                }
-                #>
-            } until ($Host.UI.RawUI.KeyAvailable)
-        }
-        until ($Host.UI.RawUI.KeyAvailable)
+                    Write-Host -NoNewLine $region": "
+
+                    $modcount++
+                    $step = $modcount%4
+                    Write-Host -NoNewLine $Progress[$step]
+
+                    $ServerInfo | Format-Table -AutoSize
+                    #$end = Get-Date
+                    #Write-Host -ForegroundColor Red ($end - $start).TotalSeconds
+
+                    Write-Host "Hit any key to get back to the Region selection."
+
+                    if ($char -ne "a")
+                    {
+                        if ($ServerInfo.Players -lt $ServerInfo.MaxPlayers)
+                        {
+                            if (CheckConnection)
+                            {
+                                Write-Host
+                                Write-Host
+                                Write-Host "###############################################################"
+                                Write-Host "## Connection to The Isle server detected. Stopping queries. ##"
+                                Write-Host "###############################################################"
+                                Start-Sleep -s 10
+                                break
+                            }
+                        }
+                    }
+                } until ($Host.UI.RawUI.KeyAvailable)
+            }
+        } until ($char -eq 'q')
+        $char = ""
     }
-}
-until ($char -eq 'q')
+} until ($char -eq 'q')
