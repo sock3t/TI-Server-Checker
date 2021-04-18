@@ -48,7 +48,7 @@ Function GetAllServerInfo_f
     ForEach ($Server in $Servers)
     {
         try {
-            Get-SteamServerInfo -ErrorAction SilentlyContinue -WarningAction SilentlyContinue -Timeout 400 -IPAddress $Server -Port 27015 | Where-Object {$_.Players -lt $_.MaxPlayers} | Select-Object -Property "ServerName", "Players", "MaxPlayers", "Version" | % { $_.ServerName = $_.ServerName.Replace("Official Evrima ", ""); $_ }
+            Get-SteamServerInfo -ErrorAction SilentlyContinue -WarningAction SilentlyContinue -Timeout 400 -IPAddress $Server -Port 27015 | Where-Object {$_.Players -lt $_.MaxPlayers} | Add-Member -MemberType AliasProperty -Name Ver -Value GameName -PassThru | Select-Object -Property "ServerName", "Players", "MaxPlayers", "Ver" | % { $_.ServerName = $_.ServerName.Replace("Official Evrima ", ""); $_.Ver = $_.Ver.Replace("Evrima ", ""); $_ }
         }
         catch [Exception] {
             #$_.message
