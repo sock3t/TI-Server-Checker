@@ -191,9 +191,15 @@ function CheckConnection
     if ($TrafficHits -gt 0)
     {
         Write-Host
-        Write-Host "#####################################################################"
-        Write-Host "## I know it's hard... keep going... next time you might be lucky! ##"
-        Write-Host "#####################################################################"
+        Write-Host "#######################################################"
+        Write-Host "## I know it's hard... that's why I wrote this tool. ##"
+        Write-Host "##                                                   ##"
+        Write-Host "##     But it can only do the clicking for you.      ##"
+        Write-Host "##      For the last meter you need some luck,       ##"
+        Write-Host "##      a bit more patience and fast reflexes.       ##"
+        Write-Host "##                                                   ##"
+        Write-Host "## -- Keep going!                                    ##"
+        Write-Host "#######################################################"
         Start-Sleep -s 7
         break
     }
@@ -209,7 +215,7 @@ function CheckPreRequisites
     else {
         Set-ExecutionPolicy RemoteSigned -Force
         $PrereqFile = "$pwd\Prerequisites.ps1"
-        Start-Process -FilePath 'powershell' -Wait -ArgumentList ( '-NoProfile', $PrereqFile ) -verb RunAs        
+        Start-Process -FilePath 'powershell' -Wait -ArgumentList ( '-NoProfile', $PrereqFile )
     }
 }
 

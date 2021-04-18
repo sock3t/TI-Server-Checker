@@ -21,7 +21,7 @@ function InstallPreRequisites
     else {
         InstallNuGet
         try {
-            Install-Module -Name SteamPS -AllowClobber -Confirm:$False -Force  
+            Install-Module -Name SteamPS -AllowClobber -Confirm:$False -Force -Scope CurrentUser 
         }
         catch [Exception] {
             $_.message 
