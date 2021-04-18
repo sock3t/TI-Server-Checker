@@ -60,7 +60,8 @@ Function GetServerInfo
 {
     Param($IP)
     try {
-        Get-SteamServerInfo -ErrorAction SilentlyContinue -WarningAction SilentlyContinue -Timeout 400 -IPAddress $IP -Port 27015 | Select-Object -Property "ServerName", "Players", "MaxPlayers", "Version" | % { $_.ServerName = $_.ServerName.Replace("Official Evrima ", ""); $_ }
+        Get-SteamServerInfo -IPAddress $IP -Port 27015 | Select-Object -Property "ServerName", "Players", "MaxPlayers", "Version" | % { $_.ServerName = $_.ServerName.Replace("Official Evrima ", ""); $_ }
+        #Get-SteamServerInfo -ErrorAction SilentlyContinue -WarningAction SilentlyContinue -Timeout 400 -IPAddress $IP -Port 27015 | Select-Object -Property "ServerName", "Players", "MaxPlayers", "Version" | % { $_.ServerName = $_.ServerName.Replace("Official Evrima ", ""); $_ }
     }
     catch [Exception] {
         #$_.message
@@ -299,7 +300,10 @@ do
                         $ServerInfo = GetAllServerInfo_f
                     }
                     else {
-                        $ServerInfo = GetServerInfo -IP $Server    
+                        Write-Host $Server
+                        $ServerInfo = GetServerInfo -IP $Server
+                        Write-Host $ServerInfo
+                        Start-Sleep -m 100 
                     }
                     
                     Clear-Host
