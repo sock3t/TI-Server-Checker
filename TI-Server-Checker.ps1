@@ -61,8 +61,8 @@ Function GetServerInfo
     Param($IP)
     try {
         # DEBUG
-        #Get-SteamServerInfo -IPAddress $IP -Port 27015 | Select-Object -Property "ServerName", "Players", "MaxPlayers", "Version" | % { $_.ServerName = $_.ServerName.Replace("Official Evrima ", ""); $_ }
-        Get-SteamServerInfo -ErrorAction SilentlyContinue -WarningAction SilentlyContinue -Timeout 400 -IPAddress $IP -Port 27015 | Select-Object -Property "ServerName", "Players", "MaxPlayers", "Version" | % { $_.ServerName = $_.ServerName.Replace("Official Evrima ", ""); $_ }
+        #Get-SteamServerInfo -IPAddress $IP -Port 27015 | Add-Member -MemberType AliasProperty -Name Ver -Value GameName -PassThru | Select-Object -Property "ServerName", "Players", "MaxPlayers", "Ver" | % { $_.ServerName = $_.ServerName.Replace("Official Evrima ", ""); $_.Ver = $_.Ver.Replace("Evrima ", ""); $_ }
+        Get-SteamServerInfo -ErrorAction SilentlyContinue -WarningAction SilentlyContinue -Timeout 400 -IPAddress $IP -Port 27015 | Add-Member -MemberType AliasProperty -Name Ver -Value GameName -PassThru | Select-Object -Property "ServerName", "Players", "MaxPlayers", "Ver" | % { $_.ServerName = $_.ServerName.Replace("Official Evrima ", ""); $_.Ver = $_.Ver.Replace("Evrima ", ""); $_ }
     }
     catch [Exception] {
         #$_.message
@@ -200,7 +200,7 @@ function CheckConnection
         Write-Host "##                                                   ##"
         Write-Host "## -- Keep going!                                    ##"
         Write-Host "#######################################################"
-        Start-Sleep -s 7
+        Start-Sleep -s 10
         break
     }
     return $false
