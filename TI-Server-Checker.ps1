@@ -10,7 +10,8 @@ https://github.com/hjorslev/SteamPS
 #BR1: 54.94.45.219
 #BR2: 54.207.198.78
 #BR3: 52.67.88.139
-#BR4: 15.228.90.72
+## old #BR4: 15.228.90.72
+#BR4: 54.232.65.187
 #BR5: 18.228.154.111
 #BR6: 18.231.145.14
 # North America
@@ -55,7 +56,10 @@ Function GetAllServerInfo_f
     ForEach ($Server in $Servers)
     {
         try {
+            # show only servers which have slots free
             Get-SteamServerInfo -ErrorAction SilentlyContinue -WarningAction SilentlyContinue -Timeout 400 -IPAddress $Server -Port 27015 | Where-Object {$_.Players -lt $_.MaxPlayers} | Add-Member -MemberType AliasProperty -Name Ver -Value GameName -PassThru | Select-Object -Property "ServerName", "Players", "MaxPlayers", "Ver" | % { $_.ServerName = $_.ServerName.Replace("Official Evrima ", ""); $_.Ver = $_.Ver.Replace("Evrima ", ""); $_ }
+            # show all server currently reachable
+            #Get-SteamServerInfo -ErrorAction SilentlyContinue -WarningAction SilentlyContinue -Timeout 400 -IPAddress $Server -Port 27015 | Add-Member -MemberType AliasProperty -Name Ver -Value GameName -PassThru | Select-Object -Property "ServerName", "Players", "MaxPlayers", "Ver" | % { $_.ServerName = $_.ServerName.Replace("Official Evrima ", ""); $_.Ver = $_.Ver.Replace("Evrima ", ""); $_ }
         }
         catch [Exception] {
             #$_.message
