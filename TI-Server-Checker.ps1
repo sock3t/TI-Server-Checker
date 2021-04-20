@@ -336,71 +336,30 @@ do
                     $step = $modcount%$Progress.Length
                     Write-Host -NoNewLine $Progress[$step]
 
+                    # escape character so we can write color escape codes
+                    $e = [char]27
                     $ServerInfo | Format-Table -AutoSize @{
                         Label = "ServerName"
                         Expression =
                         {
                             if ($_.Players -lt $_.MaxPlayers) {
-                                $color = "32"
+                                $fgcolor = "32"
+                                $bgcolor = "40"
                             }
                             elseif ($_.Players -gt $_.MaxPlayers) {
-                                $color = "31"
+                                $fgcolor = "31"
+                                $bgcolor = "40"
                             }
                             elseif ($_.Players -eq $_.MaxPlayers) {
-                                $color = "0"
+                                $fgcolor = "0"
+                                $bgcolor = "0"
                             }
-                            $e = [char]27
-                            "$e[${color}m$($_.ServerName)${e}[0m"
+                            "$e[${fgcolor};${bgcolor}m$($_.ServerName)"
                         }
-                    }, @{
-                        Label = "Players"
-                        Expression =
-                        {
-                            if ($_.Players -lt $_.MaxPlayers) {
-                                $color = "32"
-                            }
-                            elseif ($_.Players -gt $_.MaxPlayers) {
-                                $color = "31"
-                            }
-                            elseif ($_.Players -eq $_.MaxPlayers) {
-                                $color = "0"
-                            }
-                            $e = [char]27
-                            "$e[${color}m$($_.Players)${e}[0m"
-                        }
-                    }, @{
-                        Label = "MaxPlayers"
-                        Expression =
-                        {
-                            if ($_.Players -lt $_.MaxPlayers) {
-                                $color = "32"
-                            }
-                            elseif ($_.Players -gt $_.MaxPlayers) {
-                                $color = "31"
-                            }
-                            elseif ($_.Players -eq $_.MaxPlayers) {
-                                $color = "0"
-                            }
-                            $e = [char]27
-                            "$e[${color}m$($_.MaxPlayers)${e}[0m"
-                        }
-                    }, @{
-                        Label = "Ver"
-                        Expression =
-                        {
-                            if ($_.Players -lt $_.MaxPlayers) {
-                                $color = "32"
-                            }
-                            elseif ($_.Players -gt $_.MaxPlayers) {
-                                $color = "31"
-                            }
-                            elseif ($_.Players -eq $_.MaxPlayers) {
-                                $color = "0"
-                            }
-                            $e = [char]27
-                            "$e[${color}m$($_.Ver)${e}[0m"
-                        }
-                    }
+                    }, Players, MaxPlayers, Ver
+                    # cancel all color codes after printing the qtable
+                    "${e}[0m"
+                    
                     #$end = Get-Date
                     #Write-Host -ForegroundColor Red ($end - $start).TotalSeconds
 
