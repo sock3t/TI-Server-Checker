@@ -39,7 +39,7 @@ $AUServers = "13.211.86.139", "54.253.198.194"
 $BRServers = "54.94.45.219", "54.207.198.78", "52.67.88.139", "54.232.65.187", "18.228.154.111", "18.231.145.14"
 $NAServers = "54.67.100.202", "13.57.204.50", "3.101.83.56", "52.53.225.74", "18.144.168.156", "3.101.104.105", "18.144.64.94", "13.56.16.27"
 $EUServers = "3.250.191.172", "3.250.111.132", "52.48.44.22", "18.203.67.73", "3.249.154.224", "34.244.123.102", "34.240.7.84", "54.171.180.126", "3.251.77.114"
-$Progress = ".", "o", "O", "o"
+$Progress = ".", "o", "O", "0", "°", "´", "°", "0", "O", "o"
 
 
 workflow GetAllServerInfo_w
@@ -57,9 +57,9 @@ Function GetAllServerInfo_f
     {
         try {
             # show only servers which have slots free
-            Get-SteamServerInfo -ErrorAction SilentlyContinue -WarningAction SilentlyContinue -Timeout 400 -IPAddress $Server -Port 27015 | Where-Object {$_.Players -lt $_.MaxPlayers} | Add-Member -MemberType AliasProperty -Name Ver -Value GameName -PassThru | Select-Object -Property "ServerName", "Players", "MaxPlayers", "Ver" | % { $_.ServerName = $_.ServerName.Replace("Official Evrima ", ""); $_.Ver = $_.Ver.Replace("Evrima ", ""); $_ }
+            #Get-SteamServerInfo -ErrorAction SilentlyContinue -WarningAction SilentlyContinue -Timeout 400 -IPAddress $Server -Port 27015 | Where-Object {$_.Players -lt $_.MaxPlayers} | Add-Member -MemberType AliasProperty -Name Ver -Value GameName -PassThru | Select-Object -Property "ServerName", "Players", "MaxPlayers", "Ver" | % { $_.ServerName = $_.ServerName.Replace("Official Evrima ", ""); $_.Ver = $_.Ver.Replace("Evrima ", ""); $_ }
             # show all server currently reachable
-            #Get-SteamServerInfo -ErrorAction SilentlyContinue -WarningAction SilentlyContinue -Timeout 400 -IPAddress $Server -Port 27015 | Add-Member -MemberType AliasProperty -Name Ver -Value GameName -PassThru | Select-Object -Property "ServerName", "Players", "MaxPlayers", "Ver" | % { $_.ServerName = $_.ServerName.Replace("Official Evrima ", ""); $_.Ver = $_.Ver.Replace("Evrima ", ""); $_ }
+            Get-SteamServerInfo -ErrorAction SilentlyContinue -WarningAction SilentlyContinue -Timeout 400 -IPAddress $Server -Port 27015 | Add-Member -MemberType AliasProperty -Name Ver -Value GameName -PassThru | Select-Object -Property "ServerName", "Players", "MaxPlayers", "Ver" | % { $_.ServerName = $_.ServerName.Replace("Official Evrima ", ""); $_.Ver = $_.Ver.Replace("Evrima ", ""); $_ }
         }
         catch [Exception] {
             #$_.message
@@ -109,7 +109,7 @@ function Show-Server-Menu
         Write-Host "'${ServerID}' Official Evrima Stress Test - ${RegionCode}${ServerID}"
     
     }
-    Write-Host "'a' to check all (only use for better timing when to hit the 'Refresh' button!)"
+    Write-Host "'a' check all (Only for checking the availability of servers and for timing when to press the 'Refresh' button!)"
     Write-Host "'q' return to region menu"
     
 }
@@ -333,10 +333,74 @@ do
                     Write-Host -NoNewLine $region": "
 
                     $modcount++
-                    $step = $modcount%4
+                    $step = $modcount%$Progress.Length
                     Write-Host -NoNewLine $Progress[$step]
 
-                    $ServerInfo | Format-Table -AutoSize
+                    $ServerInfo | Format-Table -AutoSize @{
+                        Label = "ServerName"
+                        Expression =
+                        {
+                            if ($_.Players -lt $_.MaxPlayers) {
+                                $color = "32"
+                            }
+                            elseif ($_.Players -gt $_.MaxPlayers) {
+                                $color = "31"
+                            }
+                            elseif ($_.Players -eq $_.MaxPlayers) {
+                                $color = "0"
+                            }
+                            $e = [char]27
+                            "$e[${color}m$($_.ServerName)${e}[0m"
+                        }
+                    }, @{
+                        Label = "Players"
+                        Expression =
+                        {
+                            if ($_.Players -lt $_.MaxPlayers) {
+                                $color = "32"
+                            }
+                            elseif ($_.Players -gt $_.MaxPlayers) {
+                                $color = "31"
+                            }
+                            elseif ($_.Players -eq $_.MaxPlayers) {
+                                $color = "0"
+                            }
+                            $e = [char]27
+                            "$e[${color}m$($_.Players)${e}[0m"
+                        }
+                    }, @{
+                        Label = "MaxPlayers"
+                        Expression =
+                        {
+                            if ($_.Players -lt $_.MaxPlayers) {
+                                $color = "32"
+                            }
+                            elseif ($_.Players -gt $_.MaxPlayers) {
+                                $color = "31"
+                            }
+                            elseif ($_.Players -eq $_.MaxPlayers) {
+                                $color = "0"
+                            }
+                            $e = [char]27
+                            "$e[${color}m$($_.MaxPlayers)${e}[0m"
+                        }
+                    }, @{
+                        Label = "Ver"
+                        Expression =
+                        {
+                            if ($_.Players -lt $_.MaxPlayers) {
+                                $color = "32"
+                            }
+                            elseif ($_.Players -gt $_.MaxPlayers) {
+                                $color = "31"
+                            }
+                            elseif ($_.Players -eq $_.MaxPlayers) {
+                                $color = "0"
+                            }
+                            $e = [char]27
+                            "$e[${color}m$($_.Ver)${e}[0m"
+                        }
+                    }
                     #$end = Get-Date
                     #Write-Host -ForegroundColor Red ($end - $start).TotalSeconds
 
