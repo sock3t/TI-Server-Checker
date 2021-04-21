@@ -22,7 +22,7 @@ Right click the "TI-Server-Checker.ps1" file and choose "Run with PowerShell"
 * Powershell
   * any Windows 10 version and flavor should already be equipped
   * I have not tested Win 8 or lower - please let me know whether it works
-* This tool depends on the PowerShell Module:
-  https://github.com/hjorslev/SteamPS
-  which in turn requires the "NuGet" PowerShell PackageProvider.
-  * During startup the script will check the dependencies and install these if required. For that operation it will open a separate window and will show progress of the installation there. Once the depencies are installed it will not have to do that for subsequent runs.
+This tool depends on the PowerShell Module:
+https://github.com/hjorslev/SteamPS
+which in turn requires the "NuGet" PowerShell PackageProvider.
+* During startup the script will check the dependencies and install these if required. For that operation it will open a separate window and will show progress of the installation there. Once the depencies are installed it will not have to do that for subsequent runs.
