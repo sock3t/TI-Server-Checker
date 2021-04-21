@@ -12,4 +12,4 @@ This tool depends on the PowerShell Module:
 https://github.com/hjorslev/SteamPS
 which in turn requires the "NuGet" PowerShell PackageProvider.
 
-During startup the script will check the dependencies and install these if required. If you run the script as a non admin user then it will kick up the Windows UAC prompt to either confirm or even ask to enter admin credentials (depends on how your Windows system is set up). Once the dependecies are installed it won't ask for that again.
+During startup the script will check the dependencies and install these if required. For that operation it will open a separate window and will show progress of the installation there. Once the depencies are installed it will not have to do that for subsequent runs.
