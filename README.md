@@ -12,17 +12,17 @@ It also has a check that will recognize once you have made a successful connecti
 
 # Install:
 If you are unfamiliar with github and how to sync stuff from here you best bet is to just download a copy of this script:
-* Click the green "Code" Button amd choose "Download ZIP"
+* Click the green "Code" Button on the top right of this website and choose "Download ZIP"
 * unpack the ZIP
 
 # Run:
-* right click the "TI-Server-Checker.ps1" file and choose "Run with PowerShell"
+Right click the "TI-Server-Checker.ps1" file and choose "Run with PowerShell"
 
 # Requirements:
 * Powershell
-** any Windows 10 version and flavor should already be equipped
-** I have not tested Win 8 or lower - please let me know whether it works
+  * any Windows 10 version and flavor should already be equipped
+  * I have not tested Win 8 or lower - please let me know whether it works
 * This tool depends on the PowerShell Module:
 https://github.com/hjorslev/SteamPS
 which in turn requires the "NuGet" PowerShell PackageProvider.
-** During startup the script will check the dependencies and install these if required. For that operation it will open a separate window and will show progress of the installation there. Once the depencies are installed it will not have to do that for subsequent runs.
+  * During startup the script will check the dependencies and install these if required. For that operation it will open a separate window and will show progress of the installation there. Once the depencies are installed it will not have to do that for subsequent runs.
