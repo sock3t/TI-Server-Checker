@@ -379,6 +379,12 @@ do
                                 Start-Sleep -s 10
                                 break
                             }
+                            # add a little extra delay (slow down queries) as long as we see a free slot
+                            Start-Sleep -Milliseconds 400
+                        }
+                        elseif ($ServerInfo.Players -gt $ServerInfo.MaxPlayers) {
+                            # slow down queries as long as the server is just spammed with connection attempts anyway
+                            Start-Sleep -Milliseconds 500
                         }
                     }
                 } until ($Host.UI.RawUI.KeyAvailable)
