@@ -8,10 +8,10 @@ It can also query a single server to achieve most accurate status of that server
 # How to use it:
 The script does not take any parameters, but it asks interactively to choose a region for which you want to check servers. So we only query servers which are relevant.
 
-It also has a check that will recognize once you have made a successful connection with a The Isle server and will automatically cease further querying.
+It also has a check that will recognize whether you have made a successful connection with a The Isle server and will automatically cease further querying.
 
 # Install:
-If you are unfamiliar with github and how to sync stuff from here you best bet is to just download a copy of this script:
+If you are unfamiliar with github and how to sync stuff from here your best bet is to just download a copy of this script:
 * Click the green "Code" Button on the top right of this website and choose "Download ZIP"
 * unpack the ZIP
 
