@@ -91,9 +91,9 @@ function Get-Serverlist
     $Servers = (Invoke-RestMethod -Uri $uri).response.Servers
     # initialize the array the we will return
     $ServerArr = @()
-    switch -regex ( $QUERY )
+    switch -regex ($QUERY)
     {
-        '(AU|BR|EU|NA)'
+        '^(AU|BR|EU|NA)$'
         {
             $_querystring = "^Official Evrima .*" + $QUERY + ".*"
             Foreach ($Server in $Servers)
@@ -106,10 +106,17 @@ function Get-Serverlist
                     $ServerArr += @{ip="$_ip"; port="$_port"; name="$_name"}
                 }
             }
+            break
         }
-        default
-        {
-            $_querystring = "(.*Echsen.*)"
+        Default {
+            if ($QUERY)
+            {
+                $_querystring = "(.*" + $QUERY + ".*|.*Echsen.*)"
+            } 
+            else
+            {
+                $_querystring = "(.*Echsen.*)"
+            }
             Foreach ($Server in $Servers)
             {
                 if ($Server.max_players -gt 0 -and $Server.Name -notmatch "^Official Evrima .*" -and ($Server.players -ge $Server.max_players -or $Server.Name -match "$_querystring"))
@@ -120,6 +127,7 @@ function Get-Serverlist
                     $ServerArr += @{ip="$_ip"; port="$_port"; name="$_name"}
                 }
             }
+            break
         }
     }
     $ServerArr = $ServerArr | Sort-Object { $_.name }
@@ -475,7 +483,8 @@ do
             #Send-UdpDatagram -EndPoint "208.64.200.52" -Port 27011 -Message $message
             #Send-UdpDatagram -EndPoint "208.64.200.65" -Port 27011 -Message $message
             #$Servers = Send-UdpDatagram -EndPoint "208.64.200.39" -Port 27011 -Message $message
-            $Servers = Get-Serverlist "" ""
+            $_phrase = Read-Host "Please enter a part of the server name you want to check or just hit enter"
+            $Servers = Get-Serverlist $_phrase
         }
     }
     if ($char -ne 'q')
@@ -566,7 +575,10 @@ do
                     }, Players, MaxPlayers, Ver
                     # cancel all color codes after printing the qtable
                     "${e}[0m"
-                    Write-Host "($($Server.ip))"
+                    if ($char -ne "a")
+                    {
+                        Write-Host "($($Server.ip))"
+                    }
                     
                     #$end = Get-Date
                     #Write-Host -ForegroundColor Red ($end - $start).TotalSeconds
