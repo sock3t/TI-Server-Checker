@@ -75,10 +75,10 @@ function Get-Serverlist
     Param(
         # Which group of servers to look for:
         # Official Evrima:
-        # * AU: Australia
-        # * BR: Brazil
-        # * EU: Europe
-        # * NA: North America
+        # * OEAU: Australia
+        # * OEBR: Brazil
+        # * OEEU: Europe
+        # * OENA: North America
         # Community
         # * 'any other string': Only community servers that are currently full (the server "Die Insel der schrecklichen Echsen" is always in the list - it is the authors own server)
         $QUERY,
@@ -93,7 +93,7 @@ function Get-Serverlist
     $ServerArr = @()
     switch -regex ($QUERY)
     {
-        '^(AU|BR|EU|NA)$'
+        '^(OEAU|OEBR|OEEU|OENA)$'
         {
             $_querystring = "^Official Evrima .*" + $QUERY + ".*"
             Foreach ($Server in $Servers)
@@ -432,25 +432,25 @@ do
             $region = "Australia"
             $RegionCode = "AU"
             #$Servers = $AUServers
-            $Servers = Get-Serverlist "AU" "\empty\1\name_match\Official Evrima *"
+            $Servers = Get-Serverlist "OEAU" "\empty\1\name_match\Official Evrima *"
         }
         'B' {
             $region = "Brazil"
             $RegionCode = "BR"
             #$Servers = $BRServers
-            $Servers = Get-Serverlist "BR" "\empty\1\name_match\Official Evrima *"
+            $Servers = Get-Serverlist "OEBR" "\empty\1\name_match\Official Evrima *"
         }
         'E' {
             $region = "Europe"
             $RegionCode = "EU"
             #$Servers = $EUServers
-            $Servers = Get-Serverlist "EU" "\empty\1\name_match\Official Evrima *"
+            $Servers = Get-Serverlist "OEEU" "\empty\1\name_match\Official Evrima *"
         }
         'N' {
             $region = "North America"
             $RegionCode = "NA"
             #$Servers = $NAServers
-            $Servers = Get-Serverlist "NA" "\empty\1\name_match\Official Evrima *"
+            $Servers = Get-Serverlist "OENA" "\empty\1\name_match\Official Evrima *"
         }
         'C' {
             $region = "Community Servers"
