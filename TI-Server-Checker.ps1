@@ -35,19 +35,164 @@ https://github.com/hjorslev/SteamPS
 #EU9: 3.251.77.114
 #>
 
-$AUServers = "13.211.86.139", "54.253.198.194"
-$BRServers = "54.94.45.219", "54.207.198.78", "52.67.88.139", "54.232.65.187", "18.228.154.111", "18.231.145.14"
-$NAServers = "54.67.100.202", "13.57.204.50", "3.101.83.56", "52.53.225.74", "18.144.168.156", "3.101.104.105", "18.144.64.94", "13.56.16.27"
-$EUServers = "3.250.191.172", "3.250.111.132", "52.48.44.22", "18.203.67.73", "3.249.154.224", "34.244.123.102", "34.240.7.84", "54.171.180.126", "3.251.77.114"
+$AUServers = 
+    @{ip="13.211.86.139"; port=28015},
+    @{ip="54.253.198.194"; port=28015}
+
+$BRServers = 
+    @{ip="54.94.45.219"; port=28015},
+    @{ip="54.207.198.78"; port=28015},
+    @{ip="52.67.88.139"; port=28015},
+    @{ip="54.232.65.187"; port=28015},
+    @{ip="18.228.154.111"; port=28015},
+    @{ip="18.231.145.14"; port=28015}
+
+$NAServers = 
+    @{ip="54.67.100.202"; port=28015},
+    @{ip="13.57.204.50"; port=28015},
+    @{ip="3.101.83.56"; port=28015},
+    @{ip="52.53.225.74"; port=28015},
+    @{ip="18.144.168.156"; port=28015},
+    @{ip="3.101.104.105"; port=28015},
+    @{ip="18.144.64.94"; port=28015},
+    @{ip="13.56.16.27"; port=28015}
+
+$EUServers = 
+    @{ip="3.250.191.172"; port=28015},
+    @{ip="3.250.111.132"; port=28015},
+    @{ip="52.48.44.22"; port=28015},
+    @{ip="18.203.67.73"; port=28015},
+    @{ip="3.249.154.224"; port=28015},
+    @{ip="34.244.123.102"; port=28015},
+    @{ip="34.240.7.84"; port=28015},
+    @{ip="54.171.180.126"; port=28015},
+    @{ip="3.251.77.114"; port=28015}
+
 $Progress = ".", "o", "O", "0", "°", "´", "°", "0", "O", "o"
 
+function Get-Serverlist
+{
+    Param(
+        # Which group of servers to look for:
+        # Official Evrima:
+        # * AU: Australia
+        # * BR: Brazil
+        # * EU: Europe
+        # * NA: North America
+        # Community
+        # * 'any other string': Only community servers that are currently full (the server "Die Insel der schrecklichen Echsen" is always in the list - it is the authors own server)
+        $QUERY,
+        # https://developer.valvesoftware.com/wiki/Master_Server_Query_Protocol#Filter - like "\full\1", "\empty\1", "\noplayers\1", etc.
+        $PARAM
+    )
+    # https://developer.valvesoftware.com/wiki/Talk:Master_Server_Query_Protocol#new_API
+    $uri = "https://api.steampowered.com/IGameServersService/GetServerList/v1/?key=4E9C85CBF2B369493F92DCE733EA3D31&filter=gamedir\theisle" + $PARAM + "&limit=999"
+    # Get the server list
+    $Servers = (Invoke-RestMethod -Uri $uri).response.Servers
+    # initialize the array the we will return
+    $ServerArr = @()
+    switch -regex ( $QUERY )
+    {
+        '(AU|BR|EU|NA)'
+        {
+            $_querystring = "^Official Evrima .*" + $QUERY + ".*"
+            Foreach ($Server in $Servers)
+            {
+                if ($Server.max_players -gt 0 -and $Server.Name -match "$_querystring")
+                {
+                    [string]$_ip = $Server.Addr.split(':')[0]
+                    [string]$_port = $Server.Addr.split(':')[1]
+                    [string]$_name = $Server.Name
+                    $ServerArr += @{ip="$_ip"; port="$_port"; name="$_name"}
+                }
+            }
+        }
+        default
+        {
+            $_querystring = "(.*Echsen.*)"
+            Foreach ($Server in $Servers)
+            {
+                if ($Server.max_players -gt 0 -and $Server.Name -notmatch "^Official Evrima .*" -and ($Server.players -ge $Server.max_players -or $Server.Name -match "$_querystring"))
+                {
+                    [string]$_ip = $Server.Addr.split(':')[0]
+                    [string]$_port = $Server.Addr.split(':')[1]
+                    [string]$_name = $Server.Name
+                    $ServerArr += @{ip="$_ip"; port="$_port"; name="$_name"}
+                }
+            }
+        }
+    }
+    $ServerArr = $ServerArr | Sort-Object { $_.name }
+    return ,$ServerArr
+}
+
+function Send-UdpDatagram
+# https://gist.github.com/PeteGoo/21a5ab7636786670e47c
+{
+    Param ([string] $EndPoint,
+    [int] $Port,
+    [string] $Message)
+
+    $IP = [System.Net.Dns]::GetHostAddresses($EndPoint)
+    $Address = [System.Net.IPAddress]::Parse($IP)
+    $EndPoints = New-Object System.Net.IPEndPoint($Address, $Port)
+    $Socket = New-Object System.Net.Sockets.UDPClient
+
+    $EncodedText = [Text.Encoding]::utf8.GetBytes($Message)
+
+    $SendMessage = $Socket.Send($EncodedText, $EncodedText.Length, $EndPoints)
+
+    # https://stackoverflow.com/a/47440927
+    $ReceiveEndPoint = new-object net.ipendpoint([net.ipaddress]::any, 0)
+    $receiveMessage = $Socket.receive([ref]$ReceiveEndPoint)
+
+    Write-Host "received message:"
+    $arr = $receiveMessage[6..($receiveMessage.Length-1)]
+    #$arr = $receiveMessage[6..11]
+    $counter = 0
+    $iparr = @()
+    Do
+    {
+        [string]$_ip = ""
+        For ($i=1; $i -le 4; $i++) {
+            #Write-Host -NoNewline $arr[$counter]
+            # If we dont convert to string then the _ip var will be casted to int and this will mess up the array / hashtable
+            $_ip += $arr[$counter].ToString()
+            if ($i%4 -ne 0) 
+            {
+                #Write-Host -NoNewline "."
+                $_ip += "."
+            }
+            $counter++
+        }
+        $a = $arr[$counter]
+        $counter++
+        $b = $arr[$counter]
+        # https://stackoverflow.com/a/24458649
+        $short = -Join (("{0:X}" -f $a),("{0:X}" -f $b))
+        #Write-Host -NoNewline ":"
+        #Write-Host ([convert]::ToInt64($short,16))
+        $_port = ([convert]::ToInt64($short,16))
+        # https://www.alkanesolutions.co.uk/2016/11/22/powershell-array-hashtables-instead-multidimensional-array/
+        $iparr += (@{ip="$_ip"; port="$_port"})
+        $counter++
+    } While ($counter -lt $arr.Length)
+    #$arr
+    #$list = ([text.encoding]::utf7.getstring($receiveMessage))
+    #$list
+
+    $Socket.Close()
+    #https://stackoverflow.com/questions/12620375/how-to-return-several-items-from-a-powershell-function/12621314
+    # 
+    return ,$iparr
+} 
 
 workflow GetAllServerInfo_w
 {
     $Servers = "13.211.86.139", "54.253.198.194", "54.94.45.219", "54.207.198.78", "52.67.88.139", "54.67.100.202", "13.57.204.50", "3.101.83.56", "52.53.225.74", "18.144.168.156", "3.101.104.105", "18.144.64.94", "13.56.16.27", "3.250.191.172", "3.250.111.132", "52.48.44.22", "18.203.67.73", "3.249.154.224", "34.244.123.102", "34.240.7.84", "54.171.180.126", "3.251.77.114"
     ForEach -Parallel ($Server in $Servers)
     {
-        Get-SteamServerInfo -ErrorAction SilentlyContinue -WarningAction SilentlyContinue -IPAddress $Server -Port 27015 | Where-Object {$_.Players -lt $_.MaxPlayers} | Select-Object -Property "ServerName", "Players", "IPAddress" | % { $_.ServerName = $_.ServerName.Replace("Official Evrima ", ""); $_ }
+        Get-SteamServerInfo -ErrorAction SilentlyContinue -WarningAction SilentlyContinue -IPAddress $Server.ip -Port $Server.port | Where-Object {$_.Players -lt $_.MaxPlayers} | Select-Object -Property "ServerName", "Players", "IPAddress" | % { $_.ServerName = $_.ServerName.Replace("Official Evrima ", ""); $_ }
     }
 }
 
@@ -57,9 +202,11 @@ Function GetAllServerInfo_f
     {
         try {
             # show only servers which have slots free
-            #Get-SteamServerInfo -ErrorAction SilentlyContinue -WarningAction SilentlyContinue -Timeout 400 -IPAddress $Server -Port 27015 | Where-Object {$_.Players -lt $_.MaxPlayers} | Add-Member -MemberType AliasProperty -Name Ver -Value GameName -PassThru | Select-Object -Property "ServerName", "Players", "MaxPlayers", "Ver" | % { $_.ServerName = $_.ServerName.Replace("Official Evrima ", ""); $_.Ver = $_.Ver.Replace("Evrima ", ""); $_ }
+            #Get-SteamServerInfo -ErrorAction SilentlyContinue -WarningAction SilentlyContinue -Timeout 400 -IPAddress $Server.ip -Port $Server.port | Where-Object {$_.Players -lt $_.MaxPlayers} | Add-Member -MemberType AliasProperty -Name Ver -Value GameName -PassThru | Select-Object -Property "ServerName", "Players", "MaxPlayers", "Ver" | % { $_.ServerName = $_.ServerName.Replace("Official Evrima ", ""); $_.Ver = $_.Ver.Replace("Evrima ", ""); $_ }
             # show all server currently reachable
-            Get-SteamServerInfo -ErrorAction SilentlyContinue -WarningAction SilentlyContinue -Timeout 400 -IPAddress $Server -Port 27015 | Add-Member -MemberType AliasProperty -Name Ver -Value GameName -PassThru | Select-Object -Property "ServerName", "Players", "MaxPlayers", "Ver" | % { $_.ServerName = $_.ServerName.Replace("Official Evrima ", ""); $_.Ver = $_.Ver.Replace("Evrima ", ""); $_ }
+            # DEBUG - with name correction, not used anymore with new server list gathering method
+            #Get-SteamServerInfo -IPAddress $Server.ip -Port $Server.port | Add-Member -MemberType AliasProperty -Name Ver -Value GameName -PassThru | Select-Object -Property "ServerName", "Players", "MaxPlayers", "Ver" | % { $_.ServerName = $_.ServerName.Replace("Official Evrima ", ""); $_.Ver = $_.Ver.Replace("Evrima ", ""); $_ }
+            Get-SteamServerInfo -ErrorAction SilentlyContinue -WarningAction SilentlyContinue -Timeout 400 -IPAddress $Server.ip -Port $Server.port | Add-Member -MemberType AliasProperty -Name Ver -Value GameName -PassThru | Select-Object -Property "ServerName", "Players", "MaxPlayers", "Ver"
         }
         catch [Exception] {
             #$_.message
@@ -69,11 +216,15 @@ Function GetAllServerInfo_f
 }
 Function GetServerInfo
 {
-    Param($IP)
+    Param(
+        $IP,
+        $PORT
+    )
     try {
         # DEBUG
-        #Get-SteamServerInfo -IPAddress $IP -Port 27015 | Add-Member -MemberType AliasProperty -Name Ver -Value GameName -PassThru | Select-Object -Property "ServerName", "Players", "MaxPlayers", "Ver" | % { $_.ServerName = $_.ServerName.Replace("Official Evrima ", ""); $_.Ver = $_.Ver.Replace("Evrima ", ""); $_ }
-        Get-SteamServerInfo -ErrorAction SilentlyContinue -WarningAction SilentlyContinue -Timeout 400 -IPAddress $IP -Port 27015 | Add-Member -MemberType AliasProperty -Name Ver -Value GameName -PassThru | Select-Object -Property "ServerName", "Players", "MaxPlayers", "Ver" | % { $_.ServerName = $_.ServerName.Replace("Official Evrima ", ""); $_.Ver = $_.Ver.Replace("Evrima ", ""); $_ }
+        #Get-SteamServerInfo -IPAddress $IP -Port 28015 | Add-Member -MemberType AliasProperty -Name Ver -Value GameName -PassThru | Select-Object -Property "ServerName", "Players", "MaxPlayers", "Ver" | % { $_.ServerName = $_.ServerName.Replace("Official Evrima ", ""); $_.Ver = $_.Ver.Replace("Evrima ", ""); $_ }
+        #Get-SteamServerInfo -ErrorAction SilentlyContinue -WarningAction SilentlyContinue -Timeout 400 -IPAddress $IP -Port $PORT | Add-Member -MemberType AliasProperty -Name Ver -Value GameName -PassThru | Select-Object -Property "ServerName", "Players", "MaxPlayers", "Ver" | % { $_.ServerName = $_.ServerName.Replace("Official Evrima ", ""); $_.Ver = $_.Ver.Replace("Evrima ", ""); $_ }
+        Get-SteamServerInfo -ErrorAction SilentlyContinue -WarningAction SilentlyContinue -Timeout 400 -IPAddress $IP -Port $PORT | Add-Member -MemberType AliasProperty -Name Ver -Value GameName -PassThru | Select-Object -Property "ServerName", "Players", "MaxPlayers", "Ver"
     }
     catch [Exception] {
         #$_.message
@@ -92,6 +243,7 @@ function Show-Region-Menu
     Write-Host "'b' Brazil"
     Write-Host "'e' Europe"
     Write-Host "'n' North America"
+    Write-Host "'c' Community Servers"
     Write-Host "'q' to quit"
 }
 function Show-Server-Menu
@@ -106,7 +258,24 @@ function Show-Server-Menu
     ForEach ($Server in $Servers)
     {
         $ServerID++
-        Write-Host "'${ServerID}' Official Evrima Stress Test - ${RegionCode}${ServerID}"
+        if ($RegionCode -ne "C")
+        {
+            try {
+                $_fake = [System.Net.Dns]::GetHostEntry($Server.ip.Trim()).HostName
+            }
+            catch {
+                $_fake = "No Hostname"
+            }
+        }
+        if ($RegionCode -ne "C" -and $_fake -notmatch ".*compute.amazonaws.com")
+        {
+            Write-Host "'${ServerID}' "$Server.name"- this one might be fake! ($($Server.ip))"
+        }
+        else 
+        {
+            Write-Host "'${ServerID}' "$Server.name
+        }
+        
     
     }
     Write-Host "'a' check all (Only for checking the availability of servers and for timing when to press the 'Refresh' button!)"
@@ -254,22 +423,59 @@ do
         'A' {
             $region = "Australia"
             $RegionCode = "AU"
-            $Servers = $AUServers
+            #$Servers = $AUServers
+            $Servers = Get-Serverlist "AU" "\empty\1\name_match\Official Evrima *"
         }
         'B' {
             $region = "Brazil"
             $RegionCode = "BR"
-            $Servers = $BRServers
+            #$Servers = $BRServers
+            $Servers = Get-Serverlist "BR" "\empty\1\name_match\Official Evrima *"
         }
         'E' {
             $region = "Europe"
             $RegionCode = "EU"
-            $Servers = $EUServers
+            #$Servers = $EUServers
+            $Servers = Get-Serverlist "EU" "\empty\1\name_match\Official Evrima *"
         }
         'N' {
             $region = "North America"
             $RegionCode = "NA"
-            $Servers = $NAServers
+            #$Servers = $NAServers
+            $Servers = Get-Serverlist "NA" "\empty\1\name_match\Official Evrima *"
+        }
+        'C' {
+            $region = "Community Servers"
+            $RegionCode = "C"
+            #$Servers = $CommunityServers
+
+            #Send-UdpDatagram -EndPoint "hl2master.steampowered.com" -Port 27011 -Message "1.0.0.0.0:0.\appid\412680."
+            # https://developer.valvesoftware.com/wiki/Master_Server_Query_Protocol
+            # https://steamdb.info/app/412680/
+            # => "1.0.0.0.0:0.\appid\412680." => Text -> HEX 34 31 32 36 38 30 (The Isle Dedicated Server)
+            # => "1.0.0.0.0:0.\appid\376210 => Text -> HEX 33 37 36 32 31 30 (The Isle)
+            $message = 
+            # character "1" + region code x03 = Europe
+            [char]0x31+[char]0x03+
+            # 0.0.0.0:0
+            [char]0x30+[char]0x2e+[char]0x30+[char]0x2e+[char]0x30+[char]0x2e+[char]0x30+[char]0x3a+[char]0x30+
+            [char]0x00+
+            # \appid
+            [char]0x61+[char]0x70+[char]0x70+[char]0x69+[char]0x64+
+            # \gamedir
+            #[char]0x5c+[char]0x67+[char]0x61+[char]0x6d+[char]0x65+[char]0x64+[char]0x69+[char]0x72+
+            # \theisle
+            #[char]0x5c+[char]0x74+[char]0x68+[char]0x65+[char]0x69+[char]0x73+[char]0x6c+[char]0x65+
+            # \412680
+            #[char]0x5c+[char]0x34+[char]0x31+[char]0x32+[char]0x36+[char]0x38+[char]0x30+
+            # \376210
+            [char]0x5c+[char]0x33+[char]0x37+[char]0x36+[char]0x32+[char]0x31+[char]0x30+
+            [char]0x00
+            #Send-UdpDatagram -EndPoint "208.64.200.39" -Port 27011 -Message $message
+            #Send-UdpDatagram -EndPoint "208.64.200.52" -Port 27011 -Message $message
+            #Send-UdpDatagram -EndPoint "208.64.200.65" -Port 27011 -Message $message
+            #$Servers = Send-UdpDatagram -EndPoint "208.64.200.39" -Port 27011 -Message $message
+            $Servers = Get-Serverlist "" ""
         }
     }
     if ($char -ne 'q')
@@ -288,15 +494,16 @@ do
             Start-Sleep -Milliseconds 100
             $host.ui.RawUI.FlushInputBuffer();
 
-            # this is a hack to convert the char from the keypress into an integer:
-            [Int32]$idx = 0
-            if ([System.Int32]::TryParse($char, [ref]$idx))
-            {
-                $idx--
-                $Server = $Servers[$idx]
-            }
             if ($char -ne 'q')
             {
+                # this is a hack to convert the char from the keypress into an integer:
+                [Int32]$idx = 0
+                if ([System.Int32]::TryParse($char, [ref]$idx))
+                {
+                    # if 3 is pressed then the array index 2 is what we want to work on because array start counting from 0 instead of 1
+                    $idx--
+                    $Server = $Servers[$idx]
+                }
                 do
                 {
                     <#
@@ -320,7 +527,7 @@ do
                     else {
                         # DEBUG
                         #Write-Host $Server
-                        $ServerInfo = GetServerInfo -IP $Server
+                        $ServerInfo = GetServerInfo -IP $Server.ip -PORT $Server.port
                         # DEBUG
                         #Write-Host $ServerInfo
                         #Start-Sleep -m 100 
@@ -359,6 +566,7 @@ do
                     }, Players, MaxPlayers, Ver
                     # cancel all color codes after printing the qtable
                     "${e}[0m"
+                    Write-Host "($($Server.ip))"
                     
                     #$end = Get-Date
                     #Write-Host -ForegroundColor Red ($end - $start).TotalSeconds
