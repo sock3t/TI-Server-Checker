@@ -93,20 +93,19 @@ function Get-Serverlist
     $ServerArr = @()
     switch -regex ($QUERY)
     {
-        '^(OEAU|OEBR|OEEU|OENA)$'
-        {
-            $_querystring = "^Official Evrima .*" + $QUERY + ".*"
+        'OE:(AU|BR|EU|NA)' {
+            $_querystring = "^Official Evrima .*" + $QUERY.split(':')[1] + ".*"
             Foreach ($Server in $Servers)
             {
                 if ($Server.max_players -gt 0 -and $Server.Name -match "$_querystring")
                 {
+
                     [string]$_ip = $Server.Addr.split(':')[0]
                     [string]$_port = $Server.Addr.split(':')[1]
                     [string]$_name = $Server.Name
                     $ServerArr += @{ip="$_ip"; port="$_port"; name="$_name"}
                 }
             }
-            break
         }
         Default {
             if ($QUERY)
@@ -432,25 +431,25 @@ do
             $region = "Australia"
             $RegionCode = "AU"
             #$Servers = $AUServers
-            $Servers = Get-Serverlist "OEAU" "\empty\1\name_match\Official Evrima *"
+            $Servers = Get-Serverlist "OE:AU" "\empty\1\name_match\Official Evrima *"
         }
         'B' {
             $region = "Brazil"
             $RegionCode = "BR"
             #$Servers = $BRServers
-            $Servers = Get-Serverlist "OEBR" "\empty\1\name_match\Official Evrima *"
+            $Servers = Get-Serverlist "OE:BR" "\empty\1\name_match\Official Evrima *"
         }
         'E' {
             $region = "Europe"
             $RegionCode = "EU"
             #$Servers = $EUServers
-            $Servers = Get-Serverlist "OEEU" "\empty\1\name_match\Official Evrima *"
+            $Servers = Get-Serverlist "OE:EU" "\empty\1\name_match\Official Evrima *"
         }
         'N' {
             $region = "North America"
             $RegionCode = "NA"
             #$Servers = $NAServers
-            $Servers = Get-Serverlist "OENA" "\empty\1\name_match\Official Evrima *"
+            $Servers = Get-Serverlist "OE:NA" "\empty\1\name_match\Official Evrima *"
         }
         'C' {
             $region = "Community Servers"
