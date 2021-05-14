@@ -2,7 +2,7 @@
 This tool relies on:
 https://github.com/hjorslev/SteamPS
 
-## Known Servers - this list is handcrafted
+## Known Servers - this list is handcrafted - meanwhile obsolete due to Get-Serverlist function below 
 # Australia
 #AU1: 13.211.86.139
 #AU2: 54.253.198.194
