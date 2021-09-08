@@ -94,7 +94,7 @@ function Get-Serverlist
     switch -regex ($QUERY)
     {
         'OE:(AU|BR|EU|NA)' {
-            $_querystring = "^Official Evrima .*" + $QUERY.split(':')[1] + ".*"
+            $_querystring = "^Official .*" + $QUERY.split(':')[1] + ".*"
             Foreach ($Server in $Servers)
             {
                 if ($Server.max_players -gt 0 -and $Server.Name -match "$_querystring")
@@ -118,7 +118,7 @@ function Get-Serverlist
             }
             Foreach ($Server in $Servers)
             {
-                if ($Server.max_players -gt 0 -and $Server.Name -notmatch "^Official Evrima .*" -and ($Server.players -ge $Server.max_players -or $Server.Name -match "$_querystring"))
+                if ($Server.max_players -gt 0 -and $Server.Name -notmatch "^Official .*" -and ($Server.players -ge $Server.max_players -or $Server.Name -match "$_querystring"))
                 {
                     [string]$_ip = $Server.Addr.split(':')[0]
                     [string]$_port = $Server.Addr.split(':')[1]
@@ -199,7 +199,7 @@ workflow GetAllServerInfo_w
     $Servers = "13.211.86.139", "54.253.198.194", "54.94.45.219", "54.207.198.78", "52.67.88.139", "54.67.100.202", "13.57.204.50", "3.101.83.56", "52.53.225.74", "18.144.168.156", "3.101.104.105", "18.144.64.94", "13.56.16.27", "3.250.191.172", "3.250.111.132", "52.48.44.22", "18.203.67.73", "3.249.154.224", "34.244.123.102", "34.240.7.84", "54.171.180.126", "3.251.77.114"
     ForEach -Parallel ($Server in $Servers)
     {
-        Get-SteamServerInfo -ErrorAction SilentlyContinue -WarningAction SilentlyContinue -IPAddress $Server.ip -Port $Server.port | Where-Object {$_.Players -lt $_.MaxPlayers} | Select-Object -Property "ServerName", "Players", "IPAddress" | % { $_.ServerName = $_.ServerName.Replace("Official Evrima ", ""); $_ }
+        Get-SteamServerInfo -ErrorAction SilentlyContinue -WarningAction SilentlyContinue -IPAddress $Server.ip -Port $Server.port | Where-Object {$_.Players -lt $_.MaxPlayers} | Select-Object -Property "ServerName", "Players", "IPAddress" | % { $_.ServerName = $_.ServerName.Replace("Official ", ""); $_ }
     }
 }
 
@@ -431,25 +431,25 @@ do
             $region = "Australia"
             $RegionCode = "AU"
             #$Servers = $AUServers
-            $Servers = Get-Serverlist "OE:AU" "\empty\1\name_match\Official Evrima *"
+            $Servers = Get-Serverlist "OE:AU" "\empty\1\name_match\Official *"
         }
         'B' {
             $region = "Brazil"
             $RegionCode = "BR"
             #$Servers = $BRServers
-            $Servers = Get-Serverlist "OE:BR" "\empty\1\name_match\Official Evrima *"
+            $Servers = Get-Serverlist "OE:BR" "\empty\1\name_match\Official *"
         }
         'E' {
             $region = "Europe"
             $RegionCode = "EU"
             #$Servers = $EUServers
-            $Servers = Get-Serverlist "OE:EU" "\empty\1\name_match\Official Evrima *"
+            $Servers = Get-Serverlist "OE:EU" "\empty\1\name_match\Official *"
         }
         'N' {
             $region = "North America"
             $RegionCode = "NA"
             #$Servers = $NAServers
-            $Servers = Get-Serverlist "OE:NA" "\empty\1\name_match\Official Evrima *"
+            $Servers = Get-Serverlist "OE:NA" "\empty\1\name_match\Official *"
         }
         'C' {
             $region = "Community Servers"
